@@ -1,0 +1,183 @@
+﻿<Window x:Class="AdHr.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:AdHr.ViewModels"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:local="clr-namespace:AdHr"
+        xmlns:c="clr-namespace:AdHr.Converters"
+        xmlns:loadin="clr-namespace:LoadingIndicators.WPF;assembly=LoadingIndicators.WPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/LoadingIndicators.WPF;component/Styles/LoadingFlipPlane.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <c:BooleanToVisibilityConverter x:Key="booleanToVisibility" 
+                                        TriggerValue="False" 
+                                        IsHidden="True" />
+            <c:SelectedUserToVisibilityConverter x:Key="selectedUserToVisibilityConverter" 
+                                         />
+            <c:ErrorMessageToVisibilityConverter x:Key="errorMessageToVisibilityConverter"  />
+            <Style x:Key="BodyContentDataGridCentering"
+               TargetType="{x:Type DataGridCell}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type DataGridCell}">
+                            <Grid Background="{TemplateBinding Background}">
+                                <ContentPresenter VerticalAlignment="Center" />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <GridSplitter Grid.Column="1" Width="5" 
+                          Grid.RowSpan="2"
+                            ResizeBehavior="PreviousAndNext"/>
+        <DataGrid x:Name="UserGrid"
+                  ItemsSource="{Binding AdhrUsers}"
+                  CellStyle="{StaticResource BodyContentDataGridCentering}"
+                  Grid.Row="1"
+                  IsReadOnly="True"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  SelectedItem="{Binding SelectedUser}"
+                  IsSynchronizedWithCurrentItem="True"                  
+                  Margin="3"
+                  >
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Név" 
+                                    Binding="{Binding Name}" />
+                <DataGridTextColumn Header="Felhasználónév" 
+                                    Binding="{Binding SamAccountName}" />
+                <DataGridTextColumn Header="Megjelenítendő név" 
+                                    Width="*"
+                                    Binding="{Binding DisplayName}" />
+                <DataGridTemplateColumn Header="">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Padding="5"
+                                        Margin="1"
+                                        Visibility="{Binding IsDirty, Converter={StaticResource booleanToVisibility}}"
+                                        Command="{Binding UpdateCommand}" >
+                                    <Button.Content>
+                                        <fa:ImageAwesome Icon="Edit" 
+                                                         Width="10"
+                                                         Height="10" />
+                                    </Button.Content>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <DataGrid x:Name="PropertyGrid"
+                  Grid.Row="1"
+                  Grid.Column="2" 
+                  Margin="3"                  
+                  CellStyle="{StaticResource BodyContentDataGridCentering}"
+                  ItemsSource="{Binding SelectedUser.Properties}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="None"
+                  SelectedItem="{Binding SelectedUser.SelectedProperty}"
+                  IsSynchronizedWithCurrentItem="True"                  
+                  >
+            <DataGrid.Columns>
+                <DataGridTextColumn IsReadOnly="True"
+                                    Width="Auto"
+                                    Binding="{Binding Name}" />
+                <DataGridTextColumn Width="*"
+                                    Binding="{Binding Value}" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Orientation="Horizontal">
+            <Button Content="Beállítások" 
+                Padding="5"
+                Margin="10"
+                Command="{Binding PropertiesCommand}" />
+            <Button
+                Padding="5"
+                Margin="10"
+                Command="{Binding ConnectCommand}" >
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Kapcsolódás"
+                               Padding="5"
+                               VerticalAlignment="Center"
+                               />
+                    </StackPanel>
+                </Button.Content>
+            </Button>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Grid.Row="0">
+            <StackPanel Orientation="Horizontal"
+               VerticalAlignment="Top"
+               HorizontalAlignment="Left"
+>               <Label Content="Szerver:" />
+                <Label Content="{Binding SettingsViewModel.AdServer}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal"
+               VerticalAlignment="Top"
+               HorizontalAlignment="Left"
+               Grid.Column="2" Grid.Row="0">
+                <Label Content="Felhasználónév:" />
+                <Label Content="{Binding SettingsViewModel.Login}" />
+            </StackPanel>
+        </StackPanel>
+        <Label Content="{Binding Version}"
+               VerticalAlignment="Top"
+               HorizontalAlignment="Right"
+               Grid.Column="2" Grid.Row="0"/>
+        <loadin:LoadingIndicator Grid.Column="2" Grid.Row="0"
+                                 VerticalAlignment="Bottom"
+                                 HorizontalAlignment="Right"
+                                 SpeedRatio="1" 
+                                 IsActive="{Binding IsWorking}" 
+                            />
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Grid.Column="2"
+                    Grid.Row="2"
+                    Margin="1">
+            <Button Padding="5"
+                    Margin="5"
+                    Visibility="{Binding SelectedUser, Converter={StaticResource selectedUserToVisibilityConverter}}"
+                    Command="{Binding SelectedUser.UpdateCommand}" >
+                <Button.Content>
+                    <fa:ImageAwesome Icon="Edit" 
+                                     Width="50"
+                                     Height="50" />
+                </Button.Content>
+            </Button>
+        </StackPanel>
+        <TextBlock x:Name="ErrorMessage"
+                   Foreground="Red"
+                   Grid.Row="2"
+                   Grid.Column="0"
+                   Text="{Binding ErrorMessage}"
+                   Visibility="{Binding ErrorMessage, Converter={StaticResource errorMessageToVisibilityConverter}}" />
+    </Grid>
+</Window>
